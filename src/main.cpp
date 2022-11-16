@@ -9,7 +9,7 @@
 
 // There is only one pixel on the board
 #define NUMPIXELS 1
-s
+
 //Use these pin definitions for the ItsyBitsy M4
 #define DATAPIN    26
 #define CLOCKPIN   21
@@ -23,6 +23,8 @@ Adafruit_LIS3DH lis = Adafruit_LIS3DH();
 long firstPixelHue = 0;
 int counter = 0;
 
+void rainbow(); // predeclare method we'll use later
+
 void setup() {
   Serial.begin(9600);
   Wire.begin(3, 4);
@@ -34,7 +36,7 @@ void setup() {
     Serial.println("Couldn't find LIS3DH sensor!");
     while (1) yield();
   }
-  Serial.println("LIS3DH found!");
+  Serial.println("Found LIS3DH sensor!");
 
   if (! sht31.begin(0x44)) {
     Serial.println("Couldn't find SHT31 sensor!");
@@ -88,9 +90,16 @@ void loop() {
     }
   
     // Light
-    uint16_t light = ltr.readVisible();
-    Serial.print("\tLight: ");
-    Serial.print(light);
+    uint16_t visible_plus_ir, infrared;
+    if (ltr.newDataAvailable()) {
+      bool valid = ltr.readBothChannels(visible_plus_ir, infrared);
+      if (valid) {
+        Serial.print("\tCH0 Visible + IR: ");
+        Serial.print(visible_plus_ir);
+        Serial.print("\tCH1 Infrared: ");
+        Serial.print(infrared);
+      }
+    }
 
     // Accel
     lis.read();      // get X Y and Z data at once
@@ -103,7 +112,7 @@ void loop() {
   else
   {
     // Just wait a little so the LED have time to update
-    delay(5);
+    delay(3);
   }
   
   counter++;
